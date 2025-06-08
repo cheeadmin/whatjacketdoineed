@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What Jacket Do I Need?</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-cyan-400 to-blue-500 min-h-screen font-sans">
+
+  <div class="max-w-sm mx-auto pt-16 px-4">
+    <div class="bg-white rounded-2xl shadow-md p-8 text-center">
+      <h1 class="text-2xl font-extrabold text-gray-800">
+        What Jacket Do I Need?
+      </h1>
+      <p class="text-sm text-gray-600 mt-2 mb-6">
+        Enter a city or ZIP code, or use your current location.
+      </p>
+
+      <input id="locationInput" type="text" placeholder="e.g. 10001 or London"
+        class="w-full px-4 py-3 mb-5 rounded-full border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+
+      <div class="flex justify-center gap-3">
+        <button onclick="getWeather()"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-6 py-2 rounded-full transition">
+          Search
+        </button>
+        <button onclick="useMyLocation()"
+          class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold px-6 py-2 rounded-full transition">
+          Use My Location
+        </button>
+      </div>
+
+      <div id="output" class="mt-6 text-sm text-left text-gray-700 space-y-2"></div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "https://bvk1ok1k9k.execute-api.us-east-1.amazonaws.com/jacket";
+
+    function getWeather() {
+      const location = document.getElementById("locationInput").value;
+      if (!location) return alert("Please enter a location.");
+      fetch(`${API_BASE}?zip=${encodeURIComponent(location)}`)
+        .then(handleResponse)
+        .catch(handleError);
+    }
+
+    function useMyLocation() {
+      if (!navigator.geolocation) {
+        alert("Geolocation not supported.");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        fetch(`${API_BASE}?lat=${latitude}&lon=${longitude}`)
+          .then(handleResponse)
+          .catch(handleError);
+      }, err => alert("Geolocation error: " + err.message));
+    }
+
+    function handleResponse(res) {
+      if (!res.ok) throw new Error("Weather API error");
+      res.json().then(data => {
+        let html = `
+          <p><strong>Location:</strong> ${data.location}</p>
+          <p><strong>Condition:</strong> ${data.temp}°C — ${data.condition}</p>
+          <p><strong>Recommendation:</strong> ${data.jacket}</p>
+        `;
+        if (data.layering) {
+          html += `<p><strong>Layering Tip:</strong> ${data.layering}</p>`;
+        }
+        if (data.hints?.length) {
+          html += `<ul class="list-disc ml-6">` + data.hints.map(h => `<li>${h}</li>`).join('') + `</ul>`;
+        }
+        document.getElementById("output").innerHTML = html;
+      });
+    }
+
+    function handleError(err) {
+      console.error(err);
+      alert("Failed to fetch weather data.");
+    }
+  </script>
+</body>
+</html>
