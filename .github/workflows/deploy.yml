@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      BUCKET_NAME: whatjacketdoineed-frontend
-      DISTRIBUTION_ID: YOUR_CLOUDFRONT_DIST_ID
+      BUCKET_NAME: whatjacketdoineed.com
+      DISTRIBUTION_ID: ERL2RXC8LK2ZT
       REGION: us-east-1
 
     steps:
@@ -30,4 +30,8 @@ jobs:
         run: |
           aws s3 sync terraform/frontend/ s3://${{ env.BUCKET_NAME }} --delete
 
-
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.DISTRIBUTION_ID }} \
+            --paths "/*"
