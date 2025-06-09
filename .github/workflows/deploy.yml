@@ -35,3 +35,15 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id ${{ env.DISTRIBUTION_ID }} \
             --paths "/*"
+            
+      - name: Zip Lambda
+        run: |
+          cd terraform/lambda
+          zip -r ../../lambda_function_payload.zip handler.py
+          cd ../..
+
+      - name: Deploy Lambda function
+        run: |
+          aws lambda update-function-code \
+            --function-name $LAMBDA_FUNCTION_NAME \
+            --zip-file fileb://lambda_function_payload.zip
