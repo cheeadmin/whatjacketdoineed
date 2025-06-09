@@ -124,6 +124,7 @@ def handler(event, context):
     return {
         "statusCode": 200,
         "headers": { "Content-Type": "application/json" },
+        "Access-Control-Allow-Origin": "*",
         "body": json.dumps({
             "location": data["location"]["name"],
             "temp": weather["temp_c"],
