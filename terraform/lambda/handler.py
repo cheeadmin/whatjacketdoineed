@@ -120,12 +120,17 @@ def handler(event, context):
         weather = data["current"]
         country = data["location"]["country"]
 
-        # Decide which temperature unit to use
-        temperature = weather["temp_f"] if country == "United States" else weather["temp_c"]
-        unit = "F" if country == "United States" else "C"
+        if country == "United States":
+            temperature = weather["temp_f"]
+            feelslike = weather["feelslike_f"]
+            unit = "F"
+        else:
+            temperature = weather["temp_c"]
+            feelslike = weather["feelslike_c"]
+            unit = "C"
 
         smart = get_smart_jacket(
-            feelslike=weather["feelslike_c"],
+            feelslike=feelslike,
             wind=weather["wind_kph"],
             condition=weather["condition"]["text"],
             is_night=(not weather["is_day"]),
