@@ -14,6 +14,7 @@ jobs:
       BUCKET_NAME: whatjacketdoineed.com
       DISTRIBUTION_ID: ERL2RXC8LK2ZT
       REGION: us-east-1
+      LAMBDA_FUNCTION_NAME: jacket-recommender
 
     steps:
       - name: Checkout code
@@ -35,7 +36,7 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id ${{ env.DISTRIBUTION_ID }} \
             --paths "/*"
-            
+
       - name: Zip Lambda
         run: |
           cd terraform/lambda
