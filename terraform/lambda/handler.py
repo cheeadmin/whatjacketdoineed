@@ -118,6 +118,12 @@ def handler(event, context):
             data = json.loads(response.read())
 
         weather = data["current"]
+        country = data["location"]["country"]
+
+        # Decide which temperature unit to use
+        temperature = weather["temp_f"] if country == "United States" else weather["temp_c"]
+        unit = "F" if country == "United States" else "C"
+
         smart = get_smart_jacket(
             feelslike=weather["feelslike_c"],
             wind=weather["wind_kph"],
@@ -134,7 +140,8 @@ def handler(event, context):
             "headers": cors_headers,
             "body": json.dumps({
                 "location": data["location"]["name"],
-                "temp": weather["temp_c"],
+                "temp": temperature,
+                "unit": unit,
                 "condition": weather["condition"]["text"],
                 "jacket": smart["jacket"],
                 "layering": smart["layering"],
