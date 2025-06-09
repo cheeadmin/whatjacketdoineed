@@ -119,8 +119,8 @@ def handler(event, context):
 
         weather = data["current"]
         country_raw = data["location"].get("country", "")
-        country = country_raw.strip().lower()
-        use_fahrenheit = country in ["usa", "united states"]
+        country_clean = country_raw.strip().lower()
+        use_fahrenheit = "usa" in country_clean or "united states" in country_clean
 
         temperature = weather["temp_f"] if use_fahrenheit else weather["temp_c"]
         feelslike = weather["feelslike_f"] if use_fahrenheit else weather["feelslike_c"]
