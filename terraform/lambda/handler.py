@@ -5,7 +5,6 @@ import urllib.request
 
 def get_smart_jacket(feelslike, wind, condition, is_night, precip_mm, humidity, uv, cloud):
     c = condition.lower()
-
     context = {
         "feelslike": feelslike,
         "wind": wind,
@@ -70,13 +69,19 @@ def get_smart_jacket(feelslike, wind, condition, is_night, precip_mm, humidity, 
 
     for rule in rules:
         if rule["when"](context):
-            jacket = rule["jacket"]
-            layer = rule["layer"]
-            break
-    else:
-        jacket = default_jacket
-        layer = default_layer
+            return {
+                "jacket": rule["jacket"],
+                "layering": rule["layer"],
+                "hints": build_hints(wind, uv, cloud, is_night, feelslike)
+            }
 
+    return {
+        "jacket": default_jacket,
+        "layering": default_layer,
+        "hints": build_hints(wind, uv, cloud, is_night, feelslike)
+    }
+
+def build_hints(wind, uv, cloud, is_night, feelslike):
     hints = []
     if wind > 20:
         hints.append("It may feel colder if you're biking or walking.")
@@ -84,12 +89,7 @@ def get_smart_jacket(feelslike, wind, condition, is_night, precip_mm, humidity, 
         hints.append("Strong UV — sun exposure might make it feel warmer.")
     if cloud > 80 and feelslike < 15:
         hints.append("Overcast skies can make it feel cooler than it is.")
-
-    return {
-        "jacket": jacket,
-        "layering": layer,
-        "hints": hints
-    }
+    return hints
 
 def handler(event, context):
     key = os.environ["WEATHERAPI_KEY"]
@@ -118,7 +118,8 @@ def handler(event, context):
             data = json.loads(response.read())
 
         weather = data["current"]
-        country = data["location"]["country"].strip().lower()
+        country_raw = data["location"].get("country", "")
+        country = country_raw.strip().lower()
         use_fahrenheit = country in ["usa", "united states"]
 
         temperature = weather["temp_f"] if use_fahrenheit else weather["temp_c"]
