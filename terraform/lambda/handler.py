@@ -99,38 +99,52 @@ def handler(event, context):
         query.get("lat") + "," + query.get("lon") if query.get("lat") and query.get("lon") else None
     )
 
+    cors_headers = {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET"
+    }
+
     if not location:
         return {
             "statusCode": 400,
+            "headers": cors_headers,
             "body": json.dumps({"error": "Missing location input"})
         }
 
-    url = f"https://api.weatherapi.com/v1/current.json?key={key}&q={urllib.parse.quote(location)}"
-    with urllib.request.urlopen(url) as response:
-        data = json.loads(response.read())
+    try:
+        url = f"https://api.weatherapi.com/v1/current.json?key={key}&q={urllib.parse.quote(location)}"
+        with urllib.request.urlopen(url) as response:
+            data = json.loads(response.read())
 
-    weather = data["current"]
-    smart = get_smart_jacket(
-        feelslike=weather["feelslike_c"],
-        wind=weather["wind_kph"],
-        condition=weather["condition"]["text"],
-        is_night=(not weather["is_day"]),
-        precip_mm=weather["precip_mm"],
-        humidity=weather["humidity"],
-        uv=weather["uv"],
-        cloud=weather["cloud"]
-    )
+        weather = data["current"]
+        smart = get_smart_jacket(
+            feelslike=weather["feelslike_c"],
+            wind=weather["wind_kph"],
+            condition=weather["condition"]["text"],
+            is_night=(not weather["is_day"]),
+            precip_mm=weather["precip_mm"],
+            humidity=weather["humidity"],
+            uv=weather["uv"],
+            cloud=weather["cloud"]
+        )
 
-    return {
-        "statusCode": 200,
-        "headers": { "Content-Type": "application/json" },
-        "Access-Control-Allow-Origin": "*",
-        "body": json.dumps({
-            "location": data["location"]["name"],
-            "temp": weather["temp_c"],
-            "condition": weather["condition"]["text"],
-            "jacket": smart["jacket"],
-            "layering": smart["layering"],
-            "hints": smart["hints"]
-        })
-    }
+        return {
+            "statusCode": 200,
+            "headers": cors_headers,
+            "body": json.dumps({
+                "location": data["location"]["name"],
+                "temp": weather["temp_c"],
+                "condition": weather["condition"]["text"],
+                "jacket": smart["jacket"],
+                "layering": smart["layering"],
+                "hints": smart["hints"]
+            })
+        }
+
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "headers": cors_headers,
+            "body": json.dumps({"error": "Failed to fetch weather data", "details": str(e)})
+        }
