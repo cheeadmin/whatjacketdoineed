@@ -118,16 +118,12 @@ def handler(event, context):
             data = json.loads(response.read())
 
         weather = data["current"]
-        country = data["location"]["country"]
+        country = data["location"]["country"].strip().lower()
+        use_fahrenheit = country in ["usa", "united states"]
 
-        if country == "United States":
-            temperature = weather["temp_f"]
-            feelslike = weather["feelslike_f"]
-            unit = "F"
-        else:
-            temperature = weather["temp_c"]
-            feelslike = weather["feelslike_c"]
-            unit = "C"
+        temperature = weather["temp_f"] if use_fahrenheit else weather["temp_c"]
+        feelslike = weather["feelslike_f"] if use_fahrenheit else weather["feelslike_c"]
+        unit = "F" if use_fahrenheit else "C"
 
         smart = get_smart_jacket(
             feelslike=feelslike,
