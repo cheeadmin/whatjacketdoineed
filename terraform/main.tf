@@ -77,18 +77,53 @@ resource "aws_route53_record" "alias" {
   }
 }
 
-resource "aws_route53_record" "www" {
+resource "aws_s3_bucket" "redirect_www" {
+  bucket = "www.whatjacketdoineed.com"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_website_configuration" "redirect_www" {
+  bucket = aws_s3_bucket.redirect_www.id
+
+  redirect_all_requests_to {
+    host_name = "whatjacketdoineed.com"
+    protocol  = "https"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "redirect_www_block" {
+  bucket = aws_s3_bucket.redirect_www.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_policy" "redirect_www_policy" {
+  bucket = aws_s3_bucket.redirect_www.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid       = "PublicReadRedirect",
+      Effect    = "Allow",
+      Principal = "*",
+      Action    = "s3:GetObject",
+      Resource  = "${aws_s3_bucket.redirect_www.arn}/*"
+    }]
+  })
+}
+
+resource "aws_route53_record" "www_redirect" {
   zone_id = aws_route53_zone.zone.zone_id
   name    = "www.whatjacketdoineed.com"
   type    = "A"
 
   alias {
-    name                   = aws_cloudfront_distribution.cdn.domain_name
-    zone_id                = aws_cloudfront_distribution.cdn.hosted_zone_id
+    name                   = aws_s3_bucket_website_configuration.redirect_www.website_domain
+    zone_id                = "Z3AQBSTGFYJSTF" # Hosted zone ID for S3 website endpoints in us-east-1
     evaluate_target_health = false
   }
 }
-
 
 resource "aws_acm_certificate_validation" "cert_validation" {
   certificate_arn         = aws_acm_certificate.cert.arn
