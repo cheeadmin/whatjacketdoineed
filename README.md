@@ -17,7 +17,7 @@ This project is built entirely using **Terraform** and deployed via **GitHub Act
 |------------------|-------------------------------------------|
 | **S3**           | Hosts static frontend (HTML/JS)           |
 | **CloudFront**   | CDN in front of S3 with HTTPS             |
-| **Lambda**       | Backend weather logic for recommendations |
+| **Lambda**       | Backend weather logic for recommendation |
 | **API Gateway**  | Exposes the Lambda over HTTP              |
 | **Route 53**     | Domain routing (`whatjacketdoineed.com`) |
 | **ACM**          | SSL cert for HTTPS                        |
